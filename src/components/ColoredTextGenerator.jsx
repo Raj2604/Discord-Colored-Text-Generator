@@ -60,28 +60,35 @@ export function ColoredTextGenerator() {
   const applyStyle = (code) => {
     const editor = editorRef.current;
     if (!editor) return;
-
+    //select the text that is currently selected
     const selection = window.getSelection();
     const text = selection.toString();
     if (!text) return;
-
+    //create a span element add the text to it and add the class name to it
     const span = document.createElement("span");
     span.innerText = text;
     span.classList.add(`ansi-${code}`);
-
+    //create a range object
     const range = selection.getRangeAt(0);
+    //delete the contents of the range
     range.deleteContents();
+    //insert the span element into the range
     range.insertNode(span);
 
     // Keep the text selected after styling
     range.selectNodeContents(span);
+    //remove all ranges
     selection.removeAllRanges();
+    //add the range to the selection
     selection.addRange(range);
   };
 
   const handleInput = (e) => {
+    //get the innerHTML of the editor
     const base = e.currentTarget.innerHTML.replace(/<(\/?(br|span|span class="ansi-[0-9]*"))>/g, "[$1]");
+    //if the base includes < or > replace the < or > with "" using regular expression
     if (base.includes("<") || base.includes(">")) {
+      //replace the < or > with ""
       e.currentTarget.innerHTML = base
         .replace(/<.*?>/g, "")
         .replace(/[<>]/g, "")
@@ -91,8 +98,11 @@ export function ColoredTextGenerator() {
 
   const nodesToANSI = (nodes, states = [{ fg: 2, bg: 2, st: 2 }]) => {
     let text = "";
+    //loop through the nodes
     for (const node of nodes) {
+      //if the node is a text node
       if (node.nodeType === 3) {  // Text node
+        //add the text to the text variable
         text += node.textContent;
         continue;
       }
@@ -124,6 +134,7 @@ export function ColoredTextGenerator() {
       
       // Process child nodes
       text += nodesToANSI(node.childNodes, states);
+      //pop the last state
       states.pop();
       
       // Reset and restore parent state
@@ -143,7 +154,9 @@ export function ColoredTextGenerator() {
 
   const convertToDiscordFormat = () => {
     if (!editorRef.current) return "";
+    //get the text from the editor
     const ansiText = nodesToANSI(editorRef.current.childNodes, [{ fg: 2, bg: 2, st: 2 }]);
+    //return the text in discord format
     return `\`\`\`ansi\n${ansiText}\n\`\`\``;
   };
 
